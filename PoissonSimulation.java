@@ -4,63 +4,70 @@ import java.util.Random;
 
 ////LUIS DURÁN FLORES  - 177406 E IKER ISLA TORRE - (ID)
 
-public class PoissonSimulation extends Thread{
-    
+public class PoissonSimulation {
+
     private static final double LAMBDA = 5;
-    
-    public static void main(String[] args) throws InterruptedException {
-        Queue<Integer> list = new LinkedList<Integer>(); 
-        CajasBanco caja1 = new CajasBanco();
-        CajasBanco caja2 = new CajasBanco();
-        CajasBanco caja3 = new CajasBanco();
-        CajasBanco caja4 = new CajasBanco();
-        
-    	for (int i = 0; i < 8; i++) {
-    		int tiempoHora = 0;
-    		int arrivals = poissonRandom(LAMBDA);
-    		System.out.println("En la hora " + (i + 1) + ", llegaron " + arrivals + " clientes.");
-    		
-    		for(int j = 1; j <= arrivals; j++) {
-            	list.add(j);
+    private static final int NUMERO_DE_CAJAS = 4;
+
+    public static void atenderClientesEnCajas(Queue<Integer> fila, int[] clientesAtendidosPorCaja) {
+        int[] tiemposAtencion = new int[NUMERO_DE_CAJAS];
+        Random random = new Random();
+
+        while (!fila.isEmpty())
+        {
+            int cajaMasRapida = nextCaja(tiemposAtencion);
+
+            if (cajaMasRapida != -1)
+            {
+                Integer clienteAtendido = fila.poll();
+                int tiempoAtencion = randomTime(); 
+
+                System.out.println("Cliente " + clienteAtendido + " está siendo atendido en la caja " + (cajaMasRapida + 1) + ". Atendido en " + tiempoAtencion + " minutos");
+                tiemposAtencion[cajaMasRapida] += tiempoAtencion;
+
+                clientesAtendidosPorCaja[cajaMasRapida]++;
             }
-    		
-    		for(int x = 1; x <= arrivals; x++) {
-    			int random = randomTime();
-    			int cliente = list.poll();
-            	if(caja1.Caja1(list, random)) {
-            		tiempoHora += random;
-            		System.out.println("Se atendió al cliente " + cliente + " en la Caja1 y se tardó " + random + " minutos");
-            		continue;
-            	}else {
-            		if(caja2.Caja2(list, random)) {
-                		tiempoHora += random;
-                		System.out.println("Se atendió al cliente " + cliente + " en la Caja2 y se tardó " + random + "minutos");
-                		continue;
-                	} else {
-                		if(caja3.Caja3(list, random)) {
-                    		tiempoHora += random;
-                    		System.out.println("Se atendió al cliente " + cliente + " en la Caja3 y se tardó " + random + "minutos");
-                    		continue;
-                    	} else {
-                    		if(caja4.Caja4(list, random)) {
-                        		tiempoHora += random;
-                        		System.out.println("Se atendió al cliente " + cliente + " en la Caja4 y se tardó " + random + "minutos");
-                        		continue;
-                        	}
-                    	}
-                	}
-            	}
-            	try {
-        			Thread.sleep(700);
-        		} catch (InterruptedException e) {
-                    e.printStackTrace();
-        		}
-    		}
-        	
-    		System.out.println("El tiempo en atender a todos fue de: " + tiempoHora + " minutos");
-            //System.out.println(list);
-    		list.clear();
-    		
+
+        }
+    }
+
+    public static int nextCaja(int[] tiemposAtencion) 
+    {
+        int cajaMasRapida = -1;
+        int tiempoMasCorto = Integer.MAX_VALUE;
+
+        for (int i = 0; i < NUMERO_DE_CAJAS; i++)
+        {
+            if (tiemposAtencion[i] < tiempoMasCorto)
+            {
+                tiempoMasCorto = tiemposAtencion[i];
+                cajaMasRapida = i;
+            }
+        }
+
+        return cajaMasRapida;
+    }
+
+    public static void main(String[] args) 
+    {
+        Queue<Integer> fila = new LinkedList<>(); 
+        int[] clientesAtendidosPorCaja = new int[NUMERO_DE_CAJAS]; 
+
+        for (int i = 0; i < 8; i++) 
+        { 
+            int arrivals = poissonRandom(LAMBDA);
+            System.out.println("\nEn la hora " + (i + 1) + ", llegaron " + arrivals + " clientes.");
+            for (int j = 1; j <= arrivals; j++)
+            {
+                fila.add(j);
+            }
+            System.out.println(fila);
+            atenderClientesEnCajas(fila, clientesAtendidosPorCaja);
+        }
+
+        for (int i = 0; i < NUMERO_DE_CAJAS; i++) 
+        {
+            System.out.println("Caja " + (i + 1) + " atendió a " + clientesAtendidosPorCaja[i] + " clientes.");
         }
     }
     
@@ -77,11 +84,13 @@ public class PoissonSimulation extends Thread{
         int k = 0;
         double p = 1.0;
         double expLambda = Math.exp(-lambda);
+
         do {
             k++;
             p *= Math.random();
         } while (p >= expLambda);
-        
+
         return k - 1;
     }
+
 }
